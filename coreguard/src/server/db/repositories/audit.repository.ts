@@ -8,7 +8,7 @@ export class AuditRepository extends BaseRepository<AuditEntry> {
   ): Promise<AuditEntry> {
     const rows = await this.queryRows<AuditEntry>(
       `INSERT INTO audit_log (event_id, changed_by, action, field_changed, old_value, new_value)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+       VALUES ($1::uuid, $2::uuid, $3::text, $4::text, $5::text, $6::text) RETURNING *`,
       [eventId, changedBy, action, fieldChanged, oldValue, newValue],
     );
     return rows[0]!;
@@ -17,7 +17,7 @@ export class AuditRepository extends BaseRepository<AuditEntry> {
   async findByEventId(eventId: string): Promise<AuditEntry[]> {
     return this.queryRows(
       `SELECT al.*, u.name as changed_by_name FROM audit_log al
-       JOIN users u ON al.changed_by = u.id WHERE al.event_id = $1 ORDER BY al.created_at ASC`,
+       JOIN users u ON al.changed_by = u.id WHERE al.event_id = $1::uuid ORDER BY al.created_at ASC`,
       [eventId],
     );
   }

@@ -3,8 +3,7 @@ export const runtime = 'nodejs';
 import { NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { ApiResponse } from '@/lib/api-response';
-import { AppError, NotFoundError } from '@/lib/errors';
-import { AuthService } from '@/server/services/auth.service';
+import { AppError, NotFoundError, UnauthorizedError } from '@/lib/errors';
 import { EventValidator, NoteValidator } from '@/server/validators';
 import { EventRepository } from '@/server/db/repositories/event.repository';
 import { AuditRepository } from '@/server/db/repositories/audit.repository';
@@ -41,7 +40,7 @@ export async function PATCH(
     const { id } = await params;
     const session = await auth();
 
-    AuthService.requireRole(session, 'operator');
+    if (!session?.user) throw new UnauthorizedError('Authentication required');
 
     const body = await req.json();
 

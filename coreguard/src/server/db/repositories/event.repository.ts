@@ -8,12 +8,12 @@ export class EventRepository extends BaseRepository<RiskEvent> {
     const params: unknown[] = [];
     let idx = 1;
 
-    if (filters.severity) { where.push(`e.severity = $${idx++}`); params.push(filters.severity); }
-    if (filters.status)   { where.push(`e.status = $${idx++}`);   params.push(filters.status); }
-    if (filters.owner)    { where.push(`e.owner_id = $${idx++}`); params.push(filters.owner); }
-    if (filters.source)   { where.push(`e.source = $${idx++}`);   params.push(filters.source); }
+    if (filters.severity) { where.push(`e.severity = $${idx++}::severity_enum`); params.push(filters.severity); }
+    if (filters.status)   { where.push(`e.status = $${idx++}::event_status_enum`);   params.push(filters.status); }
+    if (filters.owner)    { where.push(`e.owner_id = $${idx++}::uuid`); params.push(filters.owner); }
+    if (filters.source)   { where.push(`e.source = $${idx++}::text`);   params.push(filters.source); }
     if (filters.search)   {
-      where.push(`(e.supplier ILIKE $${idx} OR e.part_asset ILIKE $${idx} OR e.source ILIKE $${idx} OR e.summary ILIKE $${idx})`);
+      where.push(`(e.supplier ILIKE $${idx}::text OR e.part_asset ILIKE $${idx}::text OR e.source ILIKE $${idx}::text OR e.summary ILIKE $${idx}::text)`);
       params.push(`%${filters.search}%`);
       idx++;
     }
@@ -40,19 +40,20 @@ export class EventRepository extends BaseRepository<RiskEvent> {
 
   async findById(id: string): Promise<RiskEvent | null> {
     return this.queryOneRow(
-      `SELECT e.*, u.name as owner_name FROM events e LEFT JOIN users u ON e.owner_id = u.id WHERE e.id = $1`, [id],
+      `SELECT e.*, u.name as owner_name FROM events e LEFT JOIN users u ON e.owner_id = u.id WHERE e.id = $1::uuid`, [id],
     );
   }
 
   async updateStatus(id: string, status: string): Promise<void> {
     await this.execute(
-      `UPDATE events SET status = $1, updated_at = now(),
-       resolved_at = CASE WHEN $1 = 'resolved' THEN now() ELSE resolved_at END WHERE id = $2`,
+      `UPDATE events SET status = $1::event_status_enum, updated_at = now(),
+       resolved_at = CASE WHEN $1::text = 'resolved' THEN now() ELSE resolved_at END
+       WHERE id = $2::uuid`,
       [status, id],
     );
   }
 
   async assignOwner(id: string, ownerId: string): Promise<void> {
-    await this.execute(`UPDATE events SET owner_id = $1, updated_at = now() WHERE id = $2`, [ownerId, id]);
+    await this.execute(`UPDATE events SET owner_id = $1::uuid, updated_at = now() WHERE id = $2::uuid`, [ownerId, id]);
   }
 }

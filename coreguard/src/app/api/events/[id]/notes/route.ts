@@ -28,7 +28,7 @@ export async function POST(
     const { id } = await params;
     const session = await auth();
 
-    AuthService.requireRole(session, 'operator');
+    AuthService.requireRole(session, 'operator', 'manager');
 
     const body = await req.json();
     const validated = NoteValidator.validateCreate(body);

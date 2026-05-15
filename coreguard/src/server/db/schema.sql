@@ -62,6 +62,22 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 CREATE INDEX IF NOT EXISTS idx_audit_event ON audit_log(event_id);
 
+-- Prevent UPDATE and DELETE on audit_log (append-only)
+CREATE OR REPLACE FUNCTION prevent_audit_modification() RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION 'audit_log is append-only: modification not allowed';
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+  CREATE TRIGGER trg_audit_no_update BEFORE UPDATE ON audit_log
+    FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification();
+  CREATE TRIGGER trg_audit_no_delete BEFORE DELETE ON audit_log
+    FOR EACH ROW EXECUTE FUNCTION prevent_audit_modification();
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
 -- Notes (immutable after insert)
 CREATE TABLE IF NOT EXISTS notes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -85,3 +101,19 @@ CREATE TABLE IF NOT EXISTS evidence (
 );
 
 CREATE INDEX IF NOT EXISTS idx_evidence_event ON evidence(event_id);
+
+-- Prevent UPDATE and DELETE on evidence (immutable after creation)
+CREATE OR REPLACE FUNCTION prevent_evidence_modification() RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION 'evidence is immutable after creation: modification not allowed';
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+  CREATE TRIGGER trg_evidence_no_update BEFORE UPDATE ON evidence
+    FOR EACH ROW EXECUTE FUNCTION prevent_evidence_modification();
+  CREATE TRIGGER trg_evidence_no_delete BEFORE DELETE ON evidence
+    FOR EACH ROW EXECUTE FUNCTION prevent_evidence_modification();
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;

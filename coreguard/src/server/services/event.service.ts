@@ -40,6 +40,8 @@ export class EventService {
 
     if (newStatus === 'resolved') {
       AuthService.requireRole(session, 'manager');
+    } else {
+      AuthService.requireRole(session, 'operator', 'manager');
     }
 
     const allowed = ALLOWED_TRANSITIONS[current.status] ?? [];
@@ -57,6 +59,8 @@ export class EventService {
   async assignOwner(eventId: string, newOwnerId: string, session: Session): Promise<void> {
     const current = await this.eventRepo.findById(eventId);
     if (!current) throw new ValidationError(`Event ${eventId} not found`);
+
+    AuthService.requireRole(session, 'operator', 'manager');
 
     await this.eventRepo.assignOwner(eventId, newOwnerId);
     await this.auditRepo.insertEntry(

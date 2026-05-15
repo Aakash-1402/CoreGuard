@@ -105,8 +105,8 @@ export class SeedService {
     const ids: string[] = [];
     for (const u of users) {
       const rows = await query<{ id: string }>(
-        `INSERT INTO users (name, email, role) VALUES ($1, $2, $3)
-         ON CONFLICT (email) DO UPDATE SET name = $1, role = $3 RETURNING id`,
+`INSERT INTO users (name, email, role) VALUES ($1::text, $2::text, $3::user_role)
+         ON CONFLICT (email) DO UPDATE SET name = $1::text, role = $3::user_role RETURNING id`,
         [u.name, u.email, u.role],
       );
       ids.push(rows[0]!.id);
@@ -121,7 +121,7 @@ export class SeedService {
       const resolved = this.pick(EVENT_STATUSES) === 'resolved' ? this.randomDate(30) : null;
       const rows = await query<{ id: string }>(
         `INSERT INTO events (supplier, part_asset, severity, status, summary, detected_at, source, owner_id, recommended_action, resolved_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+         VALUES ($1::text,$2::text,$3::severity_enum,$4::event_status_enum,$5::text,$6::timestamptz,$7::text,$8::uuid,$9::text,$10::timestamptz) RETURNING id`,
         [
           this.pick(SUPPLIERS), this.pick(PARTS), this.pick(SEVERITIES), this.pick(EVENT_STATUSES),
           this.pick(SUMMARIES), this.randomDate(60), this.pick(SOURCES),
@@ -138,7 +138,7 @@ export class SeedService {
     for (let i = 0; i < count; i++) {
       const type = this.pick(['document', 'link', 'screenshot']);
       await execute(
-        `INSERT INTO evidence (event_id, title, link, type, added_by) VALUES ($1,$2,$3,$4,$5)`,
+        `INSERT INTO evidence (event_id, title, link, type, added_by) VALUES ($1::uuid,$2::text,$3::text,$4::text,$5::uuid)`,
         [this.pick(eventIds), this.pick(EVIDENCE_TITLES), type === 'link' ? `https://example.com/evidence/${i}` : null, type, this.pick(userIds)],
       );
     }
@@ -147,7 +147,7 @@ export class SeedService {
   private async seedNotes(eventIds: string[], userIds: string[], count: number): Promise<void> {
     for (let i = 0; i < count; i++) {
       await execute(
-        `INSERT INTO notes (event_id, author_id, content) VALUES ($1,$2,$3)`,
+        `INSERT INTO notes (event_id, author_id, content) VALUES ($1::uuid,$2::uuid,$3::text)`,
         [this.pick(eventIds), this.pick(userIds), this.pick(NOTE_TEMPLATES)],
       );
     }
@@ -161,8 +161,8 @@ export class SeedService {
       if (this.rng() > 0.5) statuses.push('resolved');
       for (let i = 1; i < statuses.length; i++) {
         await execute(
-          `INSERT INTO audit_log (event_id, changed_by, action, field_changed, old_value, new_value)
-           VALUES ($1,$2,$3,$4,$5,$6)`,
+`INSERT INTO audit_log (event_id, changed_by, action, field_changed, old_value, new_value)
+           VALUES ($1::uuid,$2::uuid,$3::text,$4::text,$5::text,$6::text)`,
           [id, this.pick(userIds), 'status_changed', 'status', statuses[i - 1], statuses[i]],
         );
       }

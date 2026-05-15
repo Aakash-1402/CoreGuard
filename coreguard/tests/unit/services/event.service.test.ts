@@ -6,7 +6,9 @@ const validTransitions: [string, string][] = [
   ['new', 'escalated'],
   ['new', 'ignored'],
   ['reviewed', 'resolved'],
+  ['reviewed', 'ignored'],
   ['escalated', 'resolved'],
+  ['escalated', 'ignored'],
   ['ignored', 'resolved'],
   ['ignored', 'new'],
 ];

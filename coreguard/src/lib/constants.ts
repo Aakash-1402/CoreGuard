@@ -10,8 +10,8 @@ export const USER_ROLES: UserRole[] = ['operator', 'manager'];
 
 export const ALLOWED_TRANSITIONS: TransitionMap = {
   new: ['reviewed', 'escalated', 'ignored'],
-  reviewed: ['resolved'],
-  escalated: ['resolved'],
+  reviewed: ['resolved', 'ignored'],
+  escalated: ['resolved', 'ignored'],
   ignored: ['resolved', 'new'],
   resolved: [],
 };
