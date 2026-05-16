@@ -37,7 +37,7 @@ export class EventsPage {
   }
 
   async expectPageLoaded() {
-    await expect(this.table).toBeVisible();
+    await this.page.waitForSelector('table', { state: 'visible', timeout: 10000 });
   }
 
   async expectEventsVisible() {

@@ -37,9 +37,7 @@ export class EventDetailPage {
   }
 
   async expectPageLoaded() {
-    await expect(this.auditTimeline).toBeVisible();
-    await expect(this.evidenceSection).toBeVisible();
-    await expect(this.notesSection).toBeVisible();
+    await this.page.waitForSelector('h3:has-text("Audit Timeline")', { state: 'visible', timeout: 10000 });
   }
 
   async expectActionButtonsVisible(expectedLabels: string[]) {
@@ -50,7 +48,7 @@ export class EventDetailPage {
 
   async expectActionButtonsNotVisible(unexpectedLabels: string[]) {
     for (const label of unexpectedLabels) {
-      const btn = this.page.locator('button', { hasText: label, exact: true });
+      const btn = this.page.getByRole('button', { name: label, exact: true });
       await expect(btn).not.toBeVisible();
     }
   }

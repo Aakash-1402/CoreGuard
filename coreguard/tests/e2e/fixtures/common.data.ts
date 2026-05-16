@@ -1,4 +1,4 @@
-import type { Severity, EventStatus, Source } from '@/types';
+import type { Severity, EventStatus, Source } from '../../../src/types';
 
 export const USERS = {
   alice: {

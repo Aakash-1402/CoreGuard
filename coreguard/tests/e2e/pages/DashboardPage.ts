@@ -11,7 +11,7 @@ export class DashboardPage {
   constructor(page: Page) {
     this.page = page;
     this.heading = page.locator('h2', { hasText: 'Dashboard' });
-    this.summaryCards = page.locator('[class*="card"], [class*="Card"]').filter({ hasText: /critical|high|medium|low|new|reviewed/i });
+    this.summaryCards = page.locator('div.bg-white.rounded-lg.border').filter({ hasText: /Total Events|Open|Resolved|Pages/i });
     this.sidebarEventsLink = page.locator('a', { hasText: 'Risk Events' });
     this.sidebarDashboardLink = page.locator('a', { hasText: 'Dashboard' });
   }
