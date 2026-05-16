@@ -73,7 +73,7 @@ export class EventDetailPage {
   }
 
   async expectNoteVisible(content: string) {
-    await expect(this.page.locator('text=' + content)).toBeVisible();
+    await expect(this.page.locator('text=' + content).first()).toBeVisible();
   }
 
   async assignOwner(ownerName: string) {
