@@ -14,7 +14,6 @@ import type { EventFilters as EventFiltersType } from '@/types';
 import { POLL_INTERVAL_MS } from '@/lib/constants';
 
 const SORTABLE_HEADERS: { key: string; label: string }[] = [
-  { key: 'detected_at', label: 'Time' },
   { key: 'severity', label: 'Severity' },
 ];
 
@@ -23,6 +22,7 @@ export function EventTable() {
   const { filters, setFilter, clearFilters } = useFilters();
   const { events, meta, isLoading, error, refresh } = useEvents(filters);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const { poll, isPolling } = usePolling(
     useCallback(() => { refresh(); }, [refresh]),
@@ -48,6 +48,17 @@ export function EventTable() {
     router.push(`/events/${eventId}`);
   }, [router]);
 
+  const handleResetToNew = useCallback(async () => {
+    setResetting(true);
+    try {
+      await fetch('/api/events/reset', { method: 'POST' });
+      clearFilters();
+      refresh();
+    } finally {
+      setResetting(false);
+    }
+  }, [clearFilters, refresh]);
+
   if (isLoading) return <Spinner className="py-16" />;
   if (error) return <ErrorBanner message="Failed to load events" onRetry={refresh} />;
 
@@ -59,6 +70,9 @@ export function EventTable() {
           <span className="text-xs text-gray-500">
             {meta.total} event{meta.total !== 1 ? 's' : ''}
           </span>
+          <Button variant="primary" size="sm" onClick={handleResetToNew} disabled={resetting}>
+            {resetting ? 'Resetting...' : 'Reset 50% to New'}
+          </Button>
           <Button variant="secondary" size="sm" onClick={poll} disabled={isPolling}>
             {isPolling ? 'Refreshing...' : 'Refresh'}
           </Button>
@@ -88,7 +102,14 @@ export function EventTable() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Summary</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Owner</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Detected</th>
+                  <th className="px-4 py-3 text-left">
+                    <button
+                      onClick={() => handleSort('detected_at')}
+                      className="text-xs font-semibold text-gray-600 uppercase tracking-wider hover:text-gray-900"
+                    >
+                      Detected{filters.sort === 'detected_at' ? (filters.order === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </button>
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Source</th>
                 </tr>
               </thead>

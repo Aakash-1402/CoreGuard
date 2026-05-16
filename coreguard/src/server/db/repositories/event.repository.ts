@@ -56,4 +56,16 @@ export class EventRepository extends BaseRepository<RiskEvent> {
   async assignOwner(id: string, ownerId: string): Promise<void> {
     await this.execute(`UPDATE events SET owner_id = $1::uuid, updated_at = now() WHERE id = $2::uuid`, [ownerId, id]);
   }
+
+  async resetRandomToNew(): Promise<number> {
+    const result = await this.queryRows<{ count: string }>(
+      `WITH to_update AS (
+         SELECT id FROM events WHERE status != 'new' ORDER BY random() LIMIT (SELECT CEIL(COUNT(*) * 0.5)::int FROM events WHERE status != 'new')
+       )
+       UPDATE events SET status = 'new'::event_status_enum, updated_at = now(), resolved_at = NULL
+       WHERE id IN (SELECT id FROM to_update)
+       RETURNING id`,
+    );
+    return result.length;
+  }
 }
