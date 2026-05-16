@@ -8,8 +8,8 @@ This file documents how AI-assisted coding tools were used during the developmen
 
 | Tool | % of Codebase | Primary Usage |
 |------|:------------:|---------------|
-| **[Tool Name / e.g. Claude Code]** | ~50% | Initial project scaffolding, repository classes, seed service, API route boilerplate, test stubs |
-| **[Tool Name / e.g. Cursor Tab]** | ~30% | Component templates, autocomplete for TypeScript types, Zod schemas, small inline completions |
+| **[Tool Name / opencode]** | ~50% | Initial project scaffolding, repository classes, seed service, API route boilerplate, test stubs |
+| **[Tool Name / github copilot]** | ~30% | Component templates, autocomplete for TypeScript types, Zod schemas, small inline completions |
 | **Manual (my own typing)** | ~20% | Architecture decisions, class hierarchy design, audit append-only enforcement, threat model, state machine validation, knowledge base, integration tests |
 
 ### Areas Where AI Was Most Helpful
@@ -32,7 +32,7 @@ This file documents how AI-assisted coding tools were used during the developmen
 
 **Feature:** Ensuring `audit_log` entries are append-only — no code path allows editing or deleting an audit entry.
 
-**Agent used:** [Claude Code / Codex / Cursor Agent]
+**Agent used:** [opencode/github copilor]
 
 **Transcript (condensed):**
 
