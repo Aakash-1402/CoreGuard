@@ -23,7 +23,7 @@
 
 ## 1. Product Overview
 
-CoreGuard's Risk Review Console provides operators and managers with a unified interface to triage risk events from the supply chain. Operators can filter, search, and inspect events, view evidence, add internal notes, escalate items, and assign owners. Managers have the additional authority to resolve events. Every mutation is recorded in an append-only audit log, creating a complete, immutable history.
+CoreGuard's Risk Review Console provides operators and managers with a unified interface to triage risk events from the supply chain. Operators can filter, search, and inspect events, view evidence, assign ownership, and escalate. Managers have all operator capabilities plus the authority to resolve events and assign owners.
 
 ### Core Features
 
@@ -215,12 +215,12 @@ curl https://<deployed-url>/api/events \
 
 **Status:** Prevention implemented (role guard). Detection (velocity alert) deferred.
 
-### Scenario 2 — Compromised Account Tamperes Audit Trail
+### Scenario 2 — Compromised Account Tampers Audit Trail
 
 **Abuse:** An attacker with valid credentials attempts to delete or modify audit log entries to cover their tracks after a malicious action.
 
 **Prevention & Detection:**
-- **Prevention:** The `AuditRepository` class has no `update()`, `delete()`, or `truncate()` methods. The database user used by the application has only `INSERT` and `SELECT` grants on `audit_log` — no `UPDATE` or `DELETE` privileges. Even if an attacker bypasses the application to run raw SQL, `UPDATE audit_log SET ...` will fail with a permission error.
+- **Prevention:** The `AuditRepository` class has no `update()`, `delete()`, or `truncate()` methods. The database user used by the application has only `INSERT` and `SELECT` grants on `audit_log`. Any attempt to `ALTER`, `DROP`, or `DELETE` fails at the database layer before the application layer even sees it.
 - **Detection:** A database-level trigger logs any permission-denied attempt to a separate monitoring log.
 
 **Status:** Prevention implemented (class-level + DB privilege restriction). DB trigger monitoring deferred.
@@ -230,7 +230,7 @@ curl https://<deployed-url>/api/events \
 **Abuse:** The `/api/seed` endpoint, if left unprotected, allows anyone to wipe all data and re-seed, destroying real audit records and production event state.
 
 **Prevention & Detection:**
-- **Prevention:** The seed endpoint checks `process.env.ALLOW_SEED === 'true'` before executing. In production, this env var is not set, so the endpoint returns 404. The route handler is wrapped in a guard that short-circuits in non-dev environments.
+- **Prevention:** The seed endpoint checks `process.env.ALLOW_SEED === 'true'` before executing. In production, this env var is not set, so the endpoint returns 404. The route handler is wrapped in a middleware that enforces this gate.
 - **Detection:** Any 200 response from `/api/seed` in production triggers an alert via log monitoring.
 
 **Status:** Prevention implemented (env guard). Production alerting deferred.
@@ -385,10 +385,10 @@ Removing this button from the DOM is not a security measure — the backend is t
 |-----|---------|--------|-----------------|
 | No real auth | `src/auth.ts`, `src/app/(auth)/login/page.tsx` | Anyone can log in as any user | Add OAuth provider (GitHub/Google) via NextAuth, remove CredentialsProvider |
 | Polling wastes requests | `src/hooks/usePolling.ts` | Unnecessary network calls when no changes | Add ETag/Last-Modified headers; poll only when tab is active |
-| No input sanitization on search | `src/server/validators/filter.validator.ts` | Potential for SQL-like injection in free-text search | Add character whitelist; parameterize all queries (already done, but add explicit regex allowlist) |
+| No input sanitization on search | `src/server/validators/filter.validator.ts` | Potential for SQL-like injection in free-text search | Add character whitelist; parameterize all queries (already done via raw SQL binding) |
 | Seed endpoint in production is env-gated only | `src/app/api/seed/route.ts` | Misconfigured env exposes wipe capability | Add a cryptographically signed admin token requirement |
 | No rate limiting on mutations | `src/app/api/events/[id]/route.ts` | An operator could script rapid status changes | Add Vercel KV-backed rate limiter: 10 mutations/minute per user |
-| Test coverage: no edge case for concurrent status updates | `tests/unit/services/event.service.test.ts` | Two users escalating simultaneously could race | Add optimistic locking with `updated_at` version check |
+| Test coverage: no edge case for concurrent status updates | `tests/unit/services/event.service.test.ts` | Two users escalating simultaneously could race | Add optimistic locking with `updated_at` version field |
 | Dashboard is optional/not scored | `src/app/(console)/dashboard/page.tsx` | Summary metrics would improve operator workflow | Build KPI cards: open critical count, by-status breakdown, avg time since detection |
 | No mobile responsiveness | All components | Unusable on phones | Add responsive breakpoints for the event table (stack rows, hide columns) |
 
@@ -419,5 +419,4 @@ curl -X POST localhost:3000/api/seed?reset=true  # Reset + seed
 
 # Production smoke test
 curl https://coreguard.vercel.app/api/healthz
-```#   C o r e G u a r d  
- 
+```
