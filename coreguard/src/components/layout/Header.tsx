@@ -17,7 +17,7 @@ export function Header() {
       </div>
       <div className="flex items-center gap-3">
         <span className="text-sm text-gray-600">{user?.name ?? user?.email}</span>
-        <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/login` })}>
+        <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: '/login' })}>
           Sign out
         </Button>
       </div>

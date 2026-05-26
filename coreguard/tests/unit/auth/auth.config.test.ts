@@ -10,7 +10,7 @@ describe('Auth configuration — signout callback URL', () => {
     expect(authFile).toContain("signIn: '/login'");
   });
 
-  it('signout callbackUrl uses NEXT_PUBLIC_BASE_URL env var', async () => {
+  it('signout callbackUrl uses relative path /login', async () => {
     const fs = await import('fs');
     const path = await import('path');
     const headerFile = fs.readFileSync(
@@ -18,11 +18,11 @@ describe('Auth configuration — signout callback URL', () => {
       'utf-8',
     );
 
-    expect(headerFile).toContain('NEXT_PUBLIC_BASE_URL');
-    expect(headerFile).toContain('/login');
+    expect(headerFile).toContain("callbackUrl: '/login'");
+    expect(headerFile).not.toContain('NEXT_PUBLIC_BASE_URL');
   });
 
-  it('env files define NEXT_PUBLIC_BASE_URL for signout callback', async () => {
+  it('env files define AUTH_TRUST_HOST and do not hardcode NEXTAUTH_URL', async () => {
     const fs = await import('fs');
     const path = await import('path');
 
@@ -35,22 +35,8 @@ describe('Auth configuration — signout callback URL', () => {
       'utf-8',
     );
 
-    expect(envExample).toContain('NEXT_PUBLIC_BASE_URL=');
-    expect(envLocal).toContain('NEXT_PUBLIC_BASE_URL=');
-  });
-
-  it('env files do not hardcode active NEXTAUTH_URL (commented out)', async () => {
-    const fs = await import('fs');
-    const path = await import('path');
-
-    const envExample = fs.readFileSync(
-      path.join(process.cwd(), '.env.example'),
-      'utf-8',
-    );
-    const envLocal = fs.readFileSync(
-      path.join(process.cwd(), '.env.local'),
-      'utf-8',
-    );
+    expect(envExample).toContain('AUTH_TRUST_HOST=true');
+    expect(envLocal).toContain('AUTH_TRUST_HOST=true');
 
     const activeNextAuthUrl = (content: string) =>
       content
@@ -59,6 +45,25 @@ describe('Auth configuration — signout callback URL', () => {
 
     expect(activeNextAuthUrl(envExample)).toHaveLength(0);
     expect(activeNextAuthUrl(envLocal)).toHaveLength(0);
+  });
+
+  it('env files do not hardcode localhost or any absolute URL', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const envExample = fs.readFileSync(
+      path.join(process.cwd(), '.env.example'),
+      'utf-8',
+    );
+    const envLocal = fs.readFileSync(
+      path.join(process.cwd(), '.env.local'),
+      'utf-8',
+    );
+
+    expect(envExample).not.toContain('localhost');
+    expect(envExample).not.toContain('http://');
+    expect(envLocal).not.toContain('localhost');
+    expect(envLocal).not.toContain('http://');
   });
 
   it('SessionProvider is in root layout (not duplicated in sub-layouts)', async () => {
