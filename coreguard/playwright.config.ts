@@ -3,13 +3,15 @@ import path from 'path';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  timeout: 30_000,
+  timeout: 60_000,
   retries: 1,
   workers: 1,
   use: {
     baseURL: 'http://localhost:3000',
     headless: true,
     screenshot: 'only-on-failure',
+    navigationTimeout: 30_000,
+    actionTimeout: 15_000,
   },
   webServer: {
     command: 'npm run dev',

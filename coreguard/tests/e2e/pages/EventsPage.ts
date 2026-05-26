@@ -60,6 +60,7 @@ export class EventsPage {
   }
 
   async clickFirstEvent() {
+    await this.table.locator('tbody tr').first().waitFor({ state: 'visible', timeout: 20000 });
     await this.table.locator('tbody tr').first().click();
     await this.page.waitForURL(/\/events\/[a-f0-9-]+/);
   }

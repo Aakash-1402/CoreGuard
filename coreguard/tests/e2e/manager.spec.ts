@@ -141,12 +141,21 @@ test.describe('Manager Scenario', () => {
   });
 
   test('manager sees all mock users on login page', async ({ page }) => {
-    await page.goto('/login');
+    await page.locator('button', { hasText: 'Sign out' }).click();
+    await page.waitForURL(/\/login/);
+    await loginPage.expectPageLoaded();
     await loginPage.expectUserButtons([
       USERS.alice.buttonLabel,
       USERS.bob.buttonLabel,
       USERS.carol.buttonLabel,
       USERS.dan.buttonLabel,
     ]);
+  });
+
+  test('manager can sign out and is redirected to login', async ({ page }) => {
+    await page.locator('button', { hasText: 'Sign out' }).click();
+    await page.waitForURL(/\/login/);
+    await loginPage.expectPageLoaded();
+    await expect(page.locator('h1', { hasText: 'CoreGuard' })).toBeVisible();
   });
 });

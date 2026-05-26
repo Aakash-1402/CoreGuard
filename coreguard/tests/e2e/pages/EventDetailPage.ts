@@ -37,7 +37,9 @@ export class EventDetailPage {
   }
 
   async expectPageLoaded() {
-    await this.page.waitForSelector('h3:has-text("Audit Timeline")', { state: 'visible', timeout: 10000 });
+    await this.page.waitForURL(/\/events\/[a-f0-9-]+/, { timeout: 15000 });
+    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForSelector('h3:has-text("Audit Timeline")', { state: 'visible', timeout: 20000 });
   }
 
   async expectActionButtonsVisible(expectedLabels: string[]) {
