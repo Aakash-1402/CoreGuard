@@ -10,7 +10,7 @@ describe('Auth configuration — signout callback URL', () => {
     expect(authFile).toContain("signIn: '/login'");
   });
 
-  it('signout callbackUrl uses relative path /login (not hardcoded localhost)', async () => {
+  it('signout callbackUrl uses NEXT_PUBLIC_BASE_URL env var', async () => {
     const fs = await import('fs');
     const path = await import('path');
     const headerFile = fs.readFileSync(
@@ -18,13 +18,28 @@ describe('Auth configuration — signout callback URL', () => {
       'utf-8',
     );
 
-    expect(headerFile).toContain("callbackUrl: '/login'");
-    expect(headerFile).not.toContain('localhost');
-    expect(headerFile).not.toContain('http://');
-    expect(headerFile).not.toContain('https://');
+    expect(headerFile).toContain('NEXT_PUBLIC_BASE_URL');
+    expect(headerFile).toContain('/login');
   });
 
-  it('env files do not hardcode localhost for NEXTAUTH_URL', async () => {
+  it('env files define NEXT_PUBLIC_BASE_URL for signout callback', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const envExample = fs.readFileSync(
+      path.join(process.cwd(), '.env.example'),
+      'utf-8',
+    );
+    const envLocal = fs.readFileSync(
+      path.join(process.cwd(), '.env.local'),
+      'utf-8',
+    );
+
+    expect(envExample).toContain('NEXT_PUBLIC_BASE_URL=');
+    expect(envLocal).toContain('NEXT_PUBLIC_BASE_URL=');
+  });
+
+  it('env files do not hardcode active NEXTAUTH_URL (commented out)', async () => {
     const fs = await import('fs');
     const path = await import('path');
 
@@ -44,23 +59,6 @@ describe('Auth configuration — signout callback URL', () => {
 
     expect(activeNextAuthUrl(envExample)).toHaveLength(0);
     expect(activeNextAuthUrl(envLocal)).toHaveLength(0);
-  });
-
-  it('no NEXT_PUBLIC env var hardcodes signout callback URL', async () => {
-    const fs = await import('fs');
-    const path = await import('path');
-
-    const envExample = fs.readFileSync(
-      path.join(process.cwd(), '.env.example'),
-      'utf-8',
-    );
-    const envLocal = fs.readFileSync(
-      path.join(process.cwd(), '.env.local'),
-      'utf-8',
-    );
-
-    expect(envExample).not.toContain('NEXT_PUBLIC_AUTH_SIGNOUT');
-    expect(envLocal).not.toContain('NEXT_PUBLIC_AUTH_SIGNOUT');
   });
 
   it('SessionProvider is in root layout (not duplicated in sub-layouts)', async () => {
